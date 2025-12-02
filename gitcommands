@@ -1,8 +1,8 @@
-git init
-git add .
-git commit -m "message"
-git remote add origin <remote-url>
-git push origin main(new)/ master(old) 
+1.  git init
+2.  git add .
+3.  git commit -m "message"
+4.  git remote add origin <remote-url>
+5.  git push origin main(new)/ master(old) 
 
 	// you can check it in remote repository
 
@@ -15,17 +15,30 @@ git push origin main(new)/ master(old)
 Already we have connected in the 1st step so no need of git remote add origin <remote-url>
 4.  git push origin main(new)/ master(old)
 
+If u want to retrieve remote repo to local pc : git clone <url>
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
- dir /a:h  -  To display hidden files
- mkdir {name} -  To make a directory
- attrib +h {name}  -  To hide 
- attrib -h {name}  -  To unhide
- rmdir /s /q {name}  - To remove folder with content
-rmdir {name}  -  To remove one empty directory
-dir  -  Display the content of directory
-rename {old} {new}  -  Rename the folder
- cls  -  clear the screen
+ 1.  dir /a:h  -  To display hidden files
+ 2.  mkdir {name} -  To make a directory
+ 3.  attrib +h {name}  -  To hide 
+ 4.  attrib -h {name}  -  To unhide
+ 5.  rmdir /s /q {name}  - To remove folder with content
+ 6.  rmdir {name}  -  To remove one empty directory
+ 7.  dir  -  Display the content of directory
+ 8.  rename {old} {new}  -  Rename the folder
+ 9.  type {file_name}  -  To display the content of the file
+ 10. notepad filename.txt  -  To create a new text file
+ 11. type {file_name}>{other filename}  -  To forward the content of one file to another file
+ 12. del {file_name}  -  To delete the file name
+ 13. del *.txt  -  To delete all text files
+ 14. cls  -  clear the screen
+
+15  .  The list of wild characters:
+		?  -  Single character
+		*  -  0 / more characters
+
+16  .  dir ?.txt  -   To display all single character named files with .txt extension 
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
