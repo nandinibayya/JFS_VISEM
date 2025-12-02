@@ -42,5 +42,8 @@ If u want to retrieve remote repo to local pc : git clone <url>
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 
- 
+ Instead of downloading we can directly preview their op
+
+http://htmlpreview.github.io/?<url>
+
 
