@@ -24,9 +24,10 @@ document.addEventListener("DOMContentLoaded", function () {
         let selectedSubjects = [];
         let total = 0;
 
-        subjects.forEach(s => {
+        subjects.forEach((s, index) => {
             if (s.checked) {
-                selectedSubjects.push(s.parentElement.innerText.trim());
+                let text = s.parentElement.innerText.trim();
+                selectedSubjects.push(`${selectedSubjects.length + 1}. ${text}`);
                 total += parseInt(s.value);
             }
         });

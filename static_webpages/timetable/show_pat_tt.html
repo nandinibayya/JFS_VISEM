@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Faculty-wise Timetable (Improved)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 18px; }
+    .controls { margin-bottom: 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    select, input[type=file], button { padding:6px 10px; border-radius:6px; border:1px solid #ccc; }
+    .faculty-title { font-weight:700; font-size:18px; margin:18px 0 6px; }
+    table { border-collapse: collapse; width: 100%; max-width:900px; margin-bottom: 22px; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:center; vertical-align:top; }
+    th { background:#e8f4ff; font-weight:700; }
+    .cell-entry { margin-bottom:6px; padding-bottom:6px; border-bottom:1px dashed #eee; }
+    .small { font-size:12px; color:#444; }
+    .note { font-size:13px; color:#333; margin-top:6px; }
+  </style>
+</head>
+<body>
+
+  <h2>Faculty-wise Timetable</h2>
+
+  <!-- Removed Print + Export buttons -->
+  <div class="controls">
+    <input id="csvFile" type="file" accept=".csv" />
+    <select id="facultySelect"><option value="">-- Upload CSV to list faculties --</option></select>
+    <button id="showAllBtn" disabled>Show All</button>
+  </div>
+
+  <div id="tables"></div>
+  <div id="message" class="note"></div>
+
+<script>
+function normalizeHeader(h){ return (h||"").trim().toUpperCase(); }
+function normalizeDay(d){
+  if(!d) return "";
+  const s = d.trim().toUpperCase();
+  const map = { MONDAY:"MON", MON:"MON", TUESDAY:"TUE", TUE:"TUE", WEDNESDAY:"WED", WED:"WED",
+                THURSDAY:"THU", THU:"THU", FRIDAY:"FRI", FRI:"FRI", SATURDAY:"SAT", SAT:"SAT" };
+  return map[s] || s.slice(0,3);
+}
+function safe(v){ return v ? String(v).trim() : ""; }
+
+const csvFile = document.getElementById("csvFile");
+const facultySelect = document.getElementById("facultySelect");
+const tablesDiv = document.getElementById("tables");
+const messageDiv = document.getElementById("message");
+const showAllBtn = document.getElementById("showAllBtn");
+
+let lastTimetable = {};
+let lastRawRows = [];
+
+csvFile.addEventListener("change",(e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  messageDiv.textContent = "Parsing CSV...";
+  Papa.parse(file,{
+    header:true, skipEmptyLines:true,
+    transformHeader:h=>normalizeHeader(h),
+    complete:(results)=>{ lastRawRows = results.data; buildTimetable(lastRawRows); },
+    error:(err)=> messageDiv.textContent = "Error: " + err.message
+  });
+});
+
+function buildTimetable(rows){
+  const timetable = {};
+  const keys = rows.length ? Object.keys(rows[0]) : [];
+
+  const mapKey = (pattern) => keys.find(k=>k.includes(pattern)) || null;
+  const FAC = mapKey("FACULTY") || mapKey("TEACHER");
+  const DAY = mapKey("DAY");
+  const SESSION = keys.includes("SESSION") ? "SESSION" : mapKey("FN") || mapKey("AN") || "SESSION";
+  const COURSE = mapKey("COURSE") || mapKey("SUBJECT");
+  const ROOM = mapKey("ROOM");
+  const BATCH = mapKey("BATCH") || mapKey("GROUP");
+
+  rows.forEach(r=>{
+    const fac = safe(r[FAC]);
+    const day = normalizeDay(safe(r[DAY]));
+    let ses = safe(r[SESSION]).toUpperCase();
+    if(ses.startsWith("F")) ses="FN";
+    else if(ses.startsWith("A")) ses="AN";
+    else ses = ses.includes("FN")?"FN": ses.includes("AN")?"AN":"FN";
+
+    if(!fac || !day) return;
+
+    timetable[fac] = timetable[fac] || {};
+    timetable[fac][day] = timetable[fac][day] || {FN:[], AN:[]};
+
+    const entry = `<div class="cell-entry"><strong>${safe(r[COURSE])}</strong>
+      <div class="small">Batch: ${safe(r[BATCH]) || "—"} | Room: ${safe(r[ROOM]) || "—"}</div>
+    </div>`;
+
+    timetable[fac][day][ses].push(entry);
+  });
+
+  lastTimetable = timetable;
+  loadFacultySelect(Object.keys(timetable).sort());
+  renderTables();
+  messageDiv.textContent = `Loaded ${rows.length} rows for ${Object.keys(timetable).length} faculties.`;
+  showAllBtn.disabled = false;
+}
+
+function loadFacultySelect(facList){
+  facultySelect.innerHTML = `<option value="">All Faculties</option>`;
+  facList.forEach(f=>{
+    const o=document.createElement("option");
+    o.value=f; o.textContent=f;
+    facultySelect.appendChild(o);
+  });
+
+  facultySelect.onchange = ()=> renderTables(facultySelect.value || null);
+}
+
+const DAYS = ["MON","TUE","WED","THU","FRI","SAT"];
+
+function renderTables(filter=null){
+  tablesDiv.innerHTML = "";
+  const facs = filter ? [filter] : Object.keys(lastTimetable);
+
+  facs.forEach(fac=>{
+    const div=document.createElement("div");
+    div.innerHTML=`<div class="faculty-title">Faculty: ${fac}</div>`;
+    let html = `<table><tr><th>DAY</th><th>FN</th><th rowspan="7">L<br>U<br>N<br>C<br>H</th><th>AN</th></tr>`;
+    DAYS.forEach(d=>{
+      const FN = (lastTimetable[fac][d]?.FN||[]).join("");
+      const AN = (lastTimetable[fac][d]?.AN||[]).join("");
+      html += `<tr><td>${d}</td><td>${FN}</td><td>${AN}</td></tr>`;
+    });
+    html += `</table>`;
+    div.innerHTML += html;
+    tablesDiv.appendChild(div);
+  });
+}
+
+showAllBtn.onclick = () => { facultySelect.value = ""; renderTables(); };
+</script>
+
+</body>
+</html>
